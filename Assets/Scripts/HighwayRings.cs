@@ -5,11 +5,15 @@ public class HighwayRings : MonoBehaviour
     public Material mat;
 
     const int MAX_RINGS = 8;
+    const float BASE_WIDTH = 2.5f;
 
     Vector4[] centers = new Vector4[MAX_RINGS];
     float[] radii = new float[MAX_RINGS];
     float[] widths = new float[MAX_RINGS];
+    float[] baseWidths = new float[MAX_RINGS];
     Color[] ringColors = new Color[MAX_RINGS];
+
+
 
     public float ringSpeed = 10000f;
     public float maxRadius = 200f;
@@ -23,7 +27,7 @@ public class HighwayRings : MonoBehaviour
     for (int i = 0; i < MAX_RINGS; i++)
     {
         radii[i] = -1;
-        widths[i] = 1f;
+        widths[i] = BASE_WIDTH;
     }
 
     // Spawn 9 test rings at different positions along Z
@@ -45,8 +49,11 @@ public class HighwayRings : MonoBehaviour
             {
                 radii[i] += ringSpeed * Time.deltaTime;
 
-                if (radii[i] > maxRadius)
+                if (radii[i] > maxRadius){
                     radii[i] = -1;
+                }else{
+                    widths[i] = baseWidths[i] * (maxRadius - radii[i]) / maxRadius;
+                }
             }
         }
 
@@ -58,13 +65,15 @@ public class HighwayRings : MonoBehaviour
         mat.SetColorArray("_RingColors", ringColors);
     }
 
-    public void SpawnRingAt(Vector3 enemyPos, float width = 1f)
+    public void SpawnRingAt(Vector3 enemyPos, float width = 1.5f)
     {
         ringIndex = (ringIndex + 1) % MAX_RINGS;
 
         centers[ringIndex] = new Vector4(enemyPos.x, 0, enemyPos.z, 0);
         radii[ringIndex] = 0f;
         widths[ringIndex] = width;
+        baseWidths[ringIndex]=width;
+
 
         // pick color
         ringColors[ringIndex] = possibleColors[ringIndex % possibleColors.Length];

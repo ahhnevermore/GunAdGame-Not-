@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 6e28063509f274106852ec2d6e9c09aa
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 231426
+  packageName: Sniper Rifle - MAYHEM
+  packageVersion: 1.0
+  assetPath: Assets/MAYHEM/Demo/RotateMayhem.cs
+  uploadId: 526145

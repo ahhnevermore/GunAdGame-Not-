@@ -1,8 +1,9 @@
-Shader "Custom/HighwayRings"
+Shader "Custom/HighwayRings_FresnelGradient"
 {
     Properties
     {
         _BaseColor("Base Color", Color) = (0.2,0.2,0.2,1)
+        _MaxZ("Max Z for Gradient", Float) = 240
     }
 
     SubShader
@@ -18,6 +19,7 @@ Shader "Custom/HighwayRings"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             float4 _BaseColor;
+            float _MaxZ;
 
             float4 _RingColors[8];
             float4 _RingCenters[8];
@@ -28,6 +30,7 @@ Shader "Custom/HighwayRings"
             struct Attributes
             {
                 float4 positionOS : POSITION;
+                float3 normalOS   : NORMAL;
                 float2 uv         : TEXCOORD0;
             };
 
@@ -50,8 +53,13 @@ Shader "Custom/HighwayRings"
             half4 frag(Varyings IN) : SV_Target
             {
                 float3 pos = IN.worldPos;
-                float3 col = _BaseColor.rgb;
 
+                // --- Z-gradient ---
+                float gradient = smoothstep(0, _MaxZ, pos.z);
+                // --- Base color ---
+                float3 col = _BaseColor.rgb * (0.7 + 0.3 * gradient);
+
+                // --- Rings ---
                 for (int i = 0; i < _RingCount; i++)
                 {
                     float2 ringPos = float2(pos.x, pos.z);
@@ -63,10 +71,8 @@ Shader "Custom/HighwayRings"
 
                     // only draw if still inside max radius
                     if (_RingRadii[i] >= 0 && dist <= _RingRadii[i])
-                        col += _RingColors[i].rgb * intensity;
+                        col += _RingColors[i].rgb * intensity * 3.0;
                 }
-
-                col = saturate(col);
                 return half4(col, 1);
             }
             ENDHLSL
