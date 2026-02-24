@@ -1,7 +1,14 @@
 fileFormatVersion: 2
 guid: 3ba5df55de38cf04d86504dab0da7464
+AssetOrigin:
+  serializedVersion: 1
+  productId: 288965
+  packageName: Lowpoly Cowboy RIO
+  packageVersion: 1.1
+  assetPath: Assets/VertexModeler/CowboyRIO/Mesh/CowboyRio_Unity.fbx
+  uploadId: 705475
 ModelImporter:
-  serializedVersion: 22200
+  serializedVersion: 24200
   internalIDToNameTable: []
   externalObjects:
   - first:
@@ -21,8 +28,6 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: 
-    rigImportErrors: 
-    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -63,6 +68,9 @@ ModelImporter:
     maxBonesPerVertex: 4
     minBoneWeight: 0.001
     optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
     meshOptimizationFlags: -1
     indexFormat: 0
     secondaryUVAngleDistortion: 8
@@ -552,26 +560,22 @@ ModelImporter:
     - name: leg_twist.l
       parentName: leg_stretch.l
       position: {x: 0.0000000047683715, y: 0.29908487, z: 0.000000012516975}
-      rotation: {x: -0.000000022097309, y: 0.00000008826057, z: -0.000000029802322,
-        w: 1}
+      rotation: {x: -0.000000022097309, y: 0.00000008826057, z: -0.000000029802322, w: 1}
       scale: {x: 1, y: 1.0000006, z: 1.0000004}
     - name: leg_twist_2.l
       parentName: leg_stretch.l
       position: {x: 0.000000021457671, y: 0.14954239, z: 0.000000004172325}
-      rotation: {x: -0.000000003498783, y: 0.00000008933846, z: -0.000000007450583,
-        w: 1}
+      rotation: {x: -0.000000003498783, y: 0.00000008933846, z: -0.000000007450583, w: 1}
       scale: {x: 1.0000001, y: 1.0000005, z: 1.0000004}
     - name: thigh_twist.l
       parentName: thigh_stretch.l
       position: {x: 8.9406965e-10, y: -0.00000003251247, z: 0.000000004172325}
-      rotation: {x: -0.000000023283059, y: -0.000000089086804, z: 0.000000020489091,
-        w: 1}
+      rotation: {x: -0.000000023283059, y: -0.000000089086804, z: 0.000000020489091, w: 1}
       scale: {x: 0.9999997, y: 0.9999997, z: 0.99999976}
     - name: thigh_twist_2.l
       parentName: thigh_stretch.l
       position: {x: 0.0000000016391277, y: 0.12768787, z: -0.000000004470348}
-      rotation: {x: -0.00000008847562, y: -0.00000008876666, z: 0.00000003539025,
-        w: 1}
+      rotation: {x: -0.00000008847562, y: -0.00000008876666, z: 0.00000003539025, w: 1}
       scale: {x: 0.9999998, y: 0.9999996, z: 0.9999996}
     - name: thigh_stretch.r
       parentName: root.x
@@ -601,20 +605,17 @@ ModelImporter:
     - name: leg_twist_2.r
       parentName: leg_stretch.r
       position: {x: -0, y: 0.14954235, z: 0.000000011324882}
-      rotation: {x: 0.000000019763645, y: 0.00000002867252, z: -0.000000029802319,
-        w: 1}
+      rotation: {x: 0.000000019763645, y: 0.00000002867252, z: -0.000000029802319, w: 1}
       scale: {x: 1.0000006, y: 1.0000001, z: 1.0000002}
     - name: thigh_twist.r
       parentName: thigh_stretch.r
       position: {x: 0.000000002803281, y: 0.000000065555795, z: 5.9604643e-10}
-      rotation: {x: 0.000000022351736, y: -0.00000020826697, z: 0.000000023283059,
-        w: 1}
+      rotation: {x: 0.000000022351736, y: -0.00000020826697, z: 0.000000023283059, w: 1}
       scale: {x: 1.0000004, y: 1.0000006, z: 1.0000006}
     - name: thigh_twist_2.r
       parentName: thigh_stretch.r
       position: {x: 0.0000000072736293, y: 0.12768796, z: 0.000000011622905}
-      rotation: {x: -0.00000008847562, y: -0.00000020924193, z: -0.000000028870993,
-        w: 1}
+      rotation: {x: -0.00000008847562, y: -0.00000020924193, z: -0.000000028870993, w: 1}
       scale: {x: 1.0000004, y: 1.0000006, z: 1.0000005}
     - name: spine_01.x
       parentName: root.x
@@ -910,10 +911,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 288965
-  packageName: Lowpoly Cowboy RIO
-  packageVersion: 1.1
-  assetPath: Assets/VertexModeler/CowboyRIO/Mesh/CowboyRio_Unity.fbx
-  uploadId: 705475

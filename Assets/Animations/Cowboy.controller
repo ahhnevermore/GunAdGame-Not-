@@ -46,7 +46,7 @@ AnimatorStateMachine:
     m_Position: {x: 540.5715, y: 77.14287, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -6955378203767456533}
-    m_Position: {x: 220, y: 230, z: 0}
+    m_Position: {x: 210, y: 220, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []
@@ -73,13 +73,13 @@ AnimatorState:
   m_IKOnFeet: 0
   m_WriteDefaultValues: 1
   m_Mirror: 0
-  m_SpeedParameterActive: 0
+  m_SpeedParameterActive: 1
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
   m_Motion: {fileID: -203655887218126122, guid: e986a2a94c7d4da4abf25b4aa1b5fbe3, type: 3}
   m_Tag: 
-  m_SpeedParameter: 
+  m_SpeedParameter: shootSpeed
   m_MirrorParameter: 
   m_CycleOffsetParameter: 
   m_TimeParameter: 
@@ -118,9 +118,9 @@ AnimatorController:
   m_Name: Cowboy
   serializedVersion: 5
   m_AnimatorParameters:
-  - m_Name: EnemyInRange
-    m_Type: 4
-    m_DefaultFloat: 0
+  - m_Name: shootSpeed
+    m_Type: 1
+    m_DefaultFloat: 1
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
