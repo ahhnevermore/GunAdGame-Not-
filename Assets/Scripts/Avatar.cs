@@ -7,26 +7,56 @@ public class Avatar : MonoBehaviour
 {
     public List<GameObject> guns;   // Drag guns into this from Inspector
     public BulletPool bulletPool;
-    private int currentIndex = 0;
+
     private GunType activeGun = GunType.Pistol;
-    private Tier gunTier = Tier.Normal;
-    private Tier selfTier = Tier.Normal;
+    public Tier gunTier = Tier.Normal;
+    public Tier selfTier = Tier.Normal;
+
+    [SerializeField] Animator anim;
+
 
 
     void Start()
     {
-        SetActiveGun(currentIndex);
+        SwitchTo(GunType.Pistol);
     }
     void Update()
     {
-
+        if (Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            activeGun++;
+            if ((int)activeGun > 2)
+            {
+                activeGun = (GunType)0;
+            }
+            SwitchTo(activeGun);
+        }
     }
 
-    public void SwitchTo(int index)
+    public void SwitchTo(GunType gunType)
     {
-        if (index < 0 || index >= guns.Count) return;
-        currentIndex = index;
-        SetActiveGun(index);
+        switch (gunType)
+        {
+            case GunType.Pistol:
+                {
+                    SetActiveGun(0);
+                    anim.SetFloat("shootSpeed", 0.7f);
+                }
+                break;
+            case GunType.Rifle:
+                {
+                    SetActiveGun(1);
+                    anim.SetFloat("shootSpeed", 1.2f);
+                }
+                break;
+
+            case GunType.Sniper:
+                {
+                    SetActiveGun(2);
+                    anim.SetFloat("shootSpeed", 0.4f);
+                }
+                break;
+        }
     }
 
     void SetActiveGun(int index)
@@ -40,6 +70,13 @@ public class Avatar : MonoBehaviour
     public void FireBullet()
     {
         Bullet b = bulletPool.GetNext(activeGun);
-        b.SetupBullet(gunTier, selfTier, new Vector3(transform.position.x, 4f, transform.position.z + 2), (int)(Math.Pow(10f, (double)selfTier) * (double)(1 + gunTier)));
+        b.SetupBullet(gunTier, selfTier, new Vector3(transform.position.x, 4f, transform.position.z + 2),
+        (int)(Math.Pow(10f, (double)selfTier) * (double)(1 + gunTier) * Tiers.GunPower[activeGun]));
+    }
+
+    public void SetTier(Tier tier)
+    {
+        selfTier = tier;
+        Color c = Tiers.UTColours[tier][0];
     }
 }

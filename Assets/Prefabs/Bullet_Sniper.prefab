@@ -267,7 +267,7 @@ MonoBehaviour:
   speed: 40
   maxDistance: 45
   power: 1
-  pierce: 1
+  pierce: 0
 --- !u!54 &2565842957149430403
 Rigidbody:
   m_ObjectHideFlags: 0

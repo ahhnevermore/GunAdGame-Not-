@@ -247,8 +247,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bullet
   speed: 30
-  maxDistance: 30
+  maxDistance: 35
   power: 1
+  pierce: 0
 --- !u!54 &8387227509864757727
 Rigidbody:
   m_ObjectHideFlags: 0

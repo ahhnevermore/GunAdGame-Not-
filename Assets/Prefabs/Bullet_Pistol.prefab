@@ -220,7 +220,7 @@ TrailRenderer:
       atime6: 0
       atime7: 0
       m_Mode: 0
-      m_ColorSpace: -1
+      m_ColorSpace: 0
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
     numCornerVertices: 0
@@ -247,8 +247,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bullet
   speed: 30
-  maxDistance: 30
+  maxDistance: 35
   power: 1
+  pierce: 0
 --- !u!54 &4942899872349948185
 Rigidbody:
   m_ObjectHideFlags: 0
