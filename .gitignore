@@ -8,3 +8,6 @@ Assembly-CSharp-Editor.csproj
 Assembly-CSharp.csproj
 UserSettings/
 Temp/
+# Ignore all C# project files
+*.csproj
+UIElementsSchema/
