@@ -1,0 +1,51 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement style="
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    ">
+    <ui:Button
+        text="Right"
+        name="Right"
+        icon-image="project://database/Assets/UI%20Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss?fileID=-4521532143779581420&amp;guid=4f5554e83fde3e449bb8f5b9f665320e&amp;type=3#arrow-right"
+        style="
+        width: 180px; 
+        height: 90px;
+        position: absolute;
+        right: 1%;
+        bottom: 40%;
+        background-color: rgba(60, 60, 60, 0.8);        
+        color: white;
+        unity-font-style: bold;
+        font-size: 28px;
+        background-size: 64px 64px;
+    "/>
+    <ui:Button text="Swap&#10;" name="Swap" icon-image="project://database/Assets/UI%20Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss?fileID=8300712400058098730&amp;guid=4f5554e83fde3e449bb8f5b9f665320e&amp;type=3#check-dash" style="
+        width: 140px; 
+        height: 60px;
+        position: absolute;
+        left: 1%;
+        bottom: 60%;
+        background-color: rgba(60, 60, 60, 0.8);
+        color: white;
+        unity-font-style: bold;
+        font-size: 28px;
+        background-size: 64px 64px;
+"/>
+    <ui:Button text="Left" name="Left" icon-image="project://database/Assets/UI%20Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss?fileID=5923138177525885446&amp;guid=4f5554e83fde3e449bb8f5b9f665320e&amp;type=3#arrow-left" 
+    style="
+        width: 180px; 
+        height: 90px;
+        position: absolute;
+        left: 1%;
+        bottom: 40%;
+        background-color: rgba(60, 60, 60, 0.8);
+        color: white;
+        unity-font-style: bold;
+        font-size: 28px;
+        background-size: 64px 64px;
+"/>
+    </ui:VisualElement>
+</ui:UXML>

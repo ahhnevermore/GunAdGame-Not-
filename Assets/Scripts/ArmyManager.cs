@@ -3,12 +3,7 @@ using System;
 using UnityEngine.InputSystem;
 public class ArmyManager : MonoBehaviour
 {
-    public int armyStrength = 1;
-    public int maxVisibleAvatars = 11;
-    private int[] powerTiers = new int[] { 1000, 100, 10, 1 };
-
-    public Avatar[] avatars;  // 10 max
-
+    
     void Start()
     {
         UpdateAvatarStrength();
@@ -33,17 +28,17 @@ public class ArmyManager : MonoBehaviour
     }
     void OnEnable()
     {
-        GlobalEvents.OnArmyChange += RefreshVisuals;
+        GlobalEvents.OnAvatarHit += OnAvatarHitCB;
     }
 
     void OnDisable()
     {
-        GlobalEvents.OnArmyChange -= RefreshVisuals;
+        GlobalEvents.OnAvatarHit -= OnAvatarHitCB;
     }
 
-    private void RefreshVisuals()
+    private void OnAvatarHitCB(int p)
     {
-        Debug.Log("Army visuals updated!");
+        armyStrength -= p;
         UpdateAvatarStrength();
     }
 
@@ -62,35 +57,30 @@ public class ArmyManager : MonoBehaviour
             while (remaining >= power && avatarIndex < avatars.Length)
             {
                 avatars[avatarIndex].gameObject.SetActive(true);
-                avatars[avatarIndex].SetTier(GetTierForPower(power));
+                avatars[avatarIndex].SetPower(power);
 
                 remaining -= power;
                 avatarIndex++;
             }
         }
     }
-
-    public Tier GetTierForPower(int power)
+    public void Left()
     {
-        if (power < 10)
-            return Tier.Normal;
 
-        if (power < 100)
-            return Tier.Ice;
-
-        if (power < 1000)
-            return Tier.Arcane;
-
-        return Tier.Legendary;
     }
+    public void Right()
+    {
+
+    }
+    public void Swap() { }
 }
 
 public static class GlobalEvents
 {
-    public static event Action OnArmyChange;
+    public static event Action<int> OnAvatarHit;
 
-    public static void ArmyChange()
+    public static void AvatarHit(int value)
     {
-        OnArmyChange?.Invoke();
+        OnAvatarHit?.Invoke(value);
     }
 }

@@ -11,8 +11,12 @@ public class Avatar : MonoBehaviour
     private GunType activeGun = GunType.Pistol;
     public Tier gunTier = Tier.Normal;
     public Tier selfTier = Tier.Normal;
+    public int power = 0;
 
-    [SerializeField] Animator anim;
+    private float fireRate; // bullets per second
+    private float nextFireTime = 0f;
+
+
 
 
 
@@ -31,6 +35,12 @@ public class Avatar : MonoBehaviour
             }
             SwitchTo(activeGun);
         }
+
+        if (Time.time >= nextFireTime)
+        {
+            FireBullet();
+            nextFireTime = Time.time + (1f / fireRate);
+        }
     }
 
     public void SwitchTo(GunType gunType)
@@ -40,20 +50,21 @@ public class Avatar : MonoBehaviour
             case GunType.Pistol:
                 {
                     SetActiveGun(0);
-                    anim.SetFloat("shootSpeed", 0.7f);
+                    fireRate = 2.5f;
                 }
                 break;
             case GunType.Rifle:
                 {
                     SetActiveGun(1);
-                    anim.SetFloat("shootSpeed", 1.2f);
+                    fireRate = 5f;
+
                 }
                 break;
 
             case GunType.Sniper:
                 {
                     SetActiveGun(2);
-                    anim.SetFloat("shootSpeed", 0.4f);
+                    fireRate = 1.4f;
                 }
                 break;
         }
@@ -67,16 +78,26 @@ public class Avatar : MonoBehaviour
         }
     }
 
-    public void FireBullet()
+
+    public void SetPower(int p)
     {
-        Bullet b = bulletPool.GetNext(activeGun);
-        b.SetupBullet(gunTier, selfTier, new Vector3(transform.position.x, 4f, transform.position.z + 2),
-        (int)(Math.Pow(10f, (double)selfTier) * (double)(1 + gunTier) * Tiers.GunPower[activeGun]));
+        power = p;
+        selfTier = GetTierForPower(p);
     }
 
-    public void SetTier(Tier tier)
+
+
+    public Tier GetTierForPower(int power)
     {
-        selfTier = tier;
-        Color c = Tiers.UTColours[tier][0];
+        if (power < 10)
+            return Tier.Normal;
+
+        if (power < 100)
+            return Tier.Ice;
+
+        if (power < 1000)
+            return Tier.Arcane;
+
+        return Tier.Legendary;
     }
 }

@@ -2,12 +2,9 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    public float speed = 20f;
-    public float maxDistance = 30f;
-    public int power = 1;
-    public bool pierce = false;
-
-
+    public float speed;
+    public float maxDistance;
+    public int power;
     private MeshRenderer meshRenderer;
     private TrailRenderer trailRenderer;
 
@@ -19,19 +16,6 @@ public class Bullet : MonoBehaviour
         trailRenderer = GetComponent<TrailRenderer>();
     }
 
-
-    void Update()
-    {
-        if (transform.position.z < maxDistance)
-        {
-            transform.Translate(Vector3.forward * speed * Time.deltaTime);
-        }
-        else
-        {
-            gameObject.SetActive(false);
-        }
-
-    }
     void OnDisable()
     {
         trailRenderer.Clear();
@@ -41,35 +25,17 @@ public class Bullet : MonoBehaviour
     public void SetupBullet(Tier mesh, Tier trail, Vector3 startPos, int pow)
     {
         transform.position = startPos;
+        power = pow;
 
         if (meshRenderer != null)
             meshRenderer.material.color = Tiers.UTColours[mesh][0];
-
         if (trailRenderer != null)
         {
-            // Set start & end color
             trailRenderer.startColor = Tiers.UTColours[trail][1];
-            trailRenderer.endColor = Tiers.UTColours[mesh][2];  // fades out
+            trailRenderer.endColor = Tiers.UTColours[mesh][2];
         }
-        gameObject.SetActive(true);
-        power = pow;
-    }
-    void OnTriggerEnter(Collider other)
-    {
-        IDamageable damageable = other.GetComponent<IDamageable>();
 
-        if (damageable != null)
-        {
-            int leftOver = damageable.TakeDamage(power);
-            if (pierce && leftOver > 0)
-            {
-                power = leftOver;
-            }
-            else
-            {
-                gameObject.SetActive(false);
-            }
-        }
+        gameObject.SetActive(true);
     }
 }
 
