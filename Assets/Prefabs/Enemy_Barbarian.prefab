@@ -50,7 +50,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 265d4eddec6c1654497a4dbbd9630fca, type: 3}
       propertyPath: m_Name
-      value: Barbarian
+      value: Enemy_Barbarian
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -77,7 +77,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2531c4576a0b3504d885c84f213df53e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Enemy
-  health: 100
-  speed: 2
+  baseHealth: 100
+  baseScoreValue: 10
+  fragmentDropType: 3
+  baseFragmentDropAmount: 20
+  speed: 3
+  canSwitchLanes: 0
+  laneSwitchInterval: 3
   tier: 0
   laneIndex: 0
+  hasAttemptedDamage: 0

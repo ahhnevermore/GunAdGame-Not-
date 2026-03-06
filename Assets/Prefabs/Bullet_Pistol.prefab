@@ -224,5 +224,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bullet
   speed: 30
-  maxDistance: 35
+  maxDistance: 40
   power: 1

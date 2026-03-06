@@ -10,6 +10,15 @@ public enum GunType
     Rifle,
     Sniper,
 }
+
+public enum FragmentType
+{
+    Pistol,
+    Rifle,
+    Sniper,
+    Army
+}
+
 public enum ArmyLane
 {
     Left,
@@ -25,6 +34,9 @@ public enum MovementType
 
 public class Manager : MonoBehaviour
 {
+    [Header("UI")]
+    public UIManager uiManager;
+
     [Header("Army Configuration")]
     public Avatar[] avatars;
     public int armyStrength = 100;
@@ -37,27 +49,61 @@ public class Manager : MonoBehaviour
     public float sniperMoveSpeed = 10f;
     [Tooltip("The approximate time it will take to reach the target. A smaller value will reach the target faster.")]
     public float smoothTime = 0.3f;
+    [Tooltip("How close an enemy needs to be to an avatar on the X-axis to collide.")]
+    public float avatarCollisionWidth = 1.0f;
 
     [Header("Lane Configuration")]
-    public float laneWidth = 3f;
+    public float roadWidth = 30f;
+    public int laneCount = 10;
+    [HideInInspector]
+    public float laneWidth; // Calculated at runtime
     public float maxArmyX = 9f;
     private ArmyLane currentArmyLane = ArmyLane.Center;
     private ArmyLane targetArmyLane = ArmyLane.Center;
     private float armyXVelocity = 0f;
 
+    [Header("Fragment System")]
+    [Tooltip("The low, starting cost for the first army fragment upgrade.")]
+    public int initialArmyFragmentThreshold = 10;
+    [Tooltip("Cost for each tier upgrade: Normal->Ice, Ice->Arcane, Arcane->Legendary")]
+    public int[] pistolFragmentThresholds = { 500, 2000, 5000 };
+    [Tooltip("Cost for each tier upgrade: Normal->Ice, Ice->Arcane, Arcane->Legendary")]
+    public int[] rifleFragmentThresholds = { 1000, 4000, 10000 };
+    [Tooltip("Cost for each tier upgrade: Normal->Ice, Ice->Arcane, Arcane->Legendary")]
+    public int[] sniperFragmentThresholds = { 2500, 8000, 20000 };
+    public float fragmentDropMultiplier = 5f;
+
+    private float currentArmyFragmentThreshold;
+    private Dictionary<FragmentType, int> currentFragments;
+    private Dictionary<GunType, Tier> gunTiers;
+
     [Header("Gun Management")]
     public float swapCooldown = 2f;
     private GunType mainGun = GunType.Pistol;
-    private GunType? sideGun = null;
+    private List<GunType> unlockedGuns = new List<GunType>();
+    private int currentGunIndex = 0;
     private float fireRate;
     private float nextSwapTime = 0f;
     private GunType? gunToKeepUpdating = null;
     private float stopUpdatingTime = 0f;
 
+    [Header("Difficulty and Scoring")]
+    public long score = 0;
+    public float timeToMaxDifficulty = 180f; // 3 minutes to reach max difficulty
+    public float minTimeBetweenWaves = 1f; // Fastest spawn rate
+    public int maxAdditionalEnemies = 10; // How many extra enemies spawn at max difficulty
+    private float gameTime = 0f;
+
+    [Header("Spawning")]
+    public Enemy[] enemyPrefabs;
+    public float initialTimeBetweenWaves = 5f;
+    public int minEnemiesPerWave = 3;
+    public int maxEnemiesPerWave = 8;
+
+    private float nextWaveTime = 0f;
+
     [Header("Enemy Management")]
-    public Enemy enemyPrefab; // For now, one type
     public int enemiesPerLane = 20;
-    public int laneCount = 10;
     public float sortLanesInterval = 5f;
     private float nextSortTime = 0f;
 
@@ -81,12 +127,17 @@ public class Manager : MonoBehaviour
 
     void Awake()
     {
+        // Calculate lane width based on fixed road width
+        laneWidth = roadWidth / laneCount;
+
+        InitializeFragments();
         InitializeBulletPools();
         InitializeLanes();
         InitializeAvatarOffsets();
 
         mainGun = GunType.Pistol;
-        sideGun = null;
+        unlockedGuns.Add(GunType.Pistol);
+        currentGunIndex = 0;
 
         // Initial setup for avatars
         foreach (var avatar in avatars)
@@ -94,14 +145,19 @@ public class Manager : MonoBehaviour
             fireRate = avatar.SwitchTo(mainGun);
         }
         UpdateAvatarStrength();
+        if (uiManager != null) uiManager.UpdateScore(score);
     }
 
     void Update()
     {
+        if (Time.timeScale == 0) return; // Don't update if game is over
+
+        gameTime += Time.deltaTime;
         UpdateArmyMovement(Time.deltaTime);
         UpdateAvatarsFiring(Time.deltaTime);
         UpdateBullets(Time.deltaTime);
         UpdateEnemies(Time.deltaTime);
+        UpdateSpawning();
 
 #if UNITY_EDITOR
         HandleDebugInput();
@@ -163,7 +219,8 @@ public class Manager : MonoBehaviour
     }
     public void Swap()
     {
-        if (sideGun.HasValue && Time.time >= nextSwapTime)
+        // Only allow swapping if more than one gun is unlocked and cooldown is over
+        if (unlockedGuns.Count > 1 && Time.time >= nextSwapTime)
         {
             nextSwapTime = Time.time + swapCooldown;
 
@@ -171,15 +228,235 @@ public class Manager : MonoBehaviour
             gunToKeepUpdating = mainGun;
             stopUpdatingTime = Time.time + swapCooldown;
 
-            // Swap the guns
-            GunType temp = mainGun;
-            mainGun = sideGun.Value;
-            sideGun = temp;
+            // Cycle to the next gun in the list
+            currentGunIndex = (currentGunIndex + 1) % unlockedGuns.Count;
+            mainGun = unlockedGuns[currentGunIndex];
+
             foreach (var avatar in avatars)
             {
                 fireRate = avatar.SwitchTo(mainGun);
             }
         }
+    }
+    #endregion
+
+    #region Spawning and Rewards
+    void InitializeFragments()
+    {
+        currentArmyFragmentThreshold = initialArmyFragmentThreshold;
+
+        currentFragments = new Dictionary<FragmentType, int>
+        {
+            { FragmentType.Army, 0 },
+            { FragmentType.Pistol, 0 },
+            { FragmentType.Rifle, 0 },
+            { FragmentType.Sniper, 0 }
+        };
+
+        gunTiers = new Dictionary<GunType, Tier>
+        {
+            { GunType.Pistol, Tier.Normal },
+            { GunType.Rifle, Tier.Normal },
+            { GunType.Sniper, Tier.Normal }
+        };
+    }
+
+    void UpdateSpawning()
+    {
+        if (Time.time >= nextWaveTime)
+        {
+            float difficultyPercent = Mathf.Clamp01(gameTime / timeToMaxDifficulty);
+            SpawnEnemyWave(difficultyPercent);
+
+            // Adjust time for next wave based on difficulty
+            float currentTimeBetweenWaves = Mathf.Lerp(initialTimeBetweenWaves, minTimeBetweenWaves, difficultyPercent);
+            nextWaveTime = Time.time + currentTimeBetweenWaves;
+        }
+    }
+
+    void SpawnEnemyWave(float difficulty)
+    {
+        // Generate a contiguous "weak block" (gap) to allow dodging.
+        // The gap width scales with lane count (approx 1/3 of the road).
+        int gapWidth = Mathf.Max(2, laneCount / 3);
+        // Vary the width slightly to add variety
+        gapWidth += UnityEngine.Random.Range(-1, 2);
+        gapWidth = Mathf.Clamp(gapWidth, 2, laneCount - 1);
+
+        // Pick a random start position for the weak block
+        int gapStart = UnityEngine.Random.Range(0, laneCount - gapWidth + 1);
+
+        for (int i = 0; i < laneCount; i++)
+        {
+            // Determine if this lane is inside the "Weak" block
+            bool isWeakLane = (i >= gapStart && i < gapStart + gapWidth);
+
+            bool shouldSpawn = false;
+            Tier tier = Tier.Normal;
+
+            if (isWeakLane)
+            {
+                // Weak Lane: High chance of being a gap (empty).
+                // If it does spawn, it's always a Normal (weak) enemy.
+                // 20% chance to spawn, meaning 80% chance of a gap.
+                if (UnityEngine.Random.value < 0.2f)
+                {
+                    shouldSpawn = true;
+                    tier = Tier.Normal;
+                }
+            }
+            else
+            {
+                // Strong Lane: High chance to spawn.
+                // Tier increases with difficulty.
+                // Spawn chance scales from 40% to 90% based on difficulty.
+                float spawnChance = Mathf.Lerp(0.4f, 0.9f, difficulty);
+                if (UnityEngine.Random.value < spawnChance)
+                {
+                    shouldSpawn = true;
+                    tier = GetRandomTier(difficulty);
+                }
+            }
+
+            if (shouldSpawn)
+            {
+                Lane lane = lanes[i];
+                // Find an inactive enemy in the selected lane
+                for (int j = 0; j < lane.enemies.Length; j++)
+                {
+                    // Use a circular search to find next available spot
+                    int idx = (lane.spawnIndex + j) % lane.enemies.Length;
+                    if (!lane.enemies[idx].gameObject.activeSelf)
+                    {
+                        float xPos = GetXForLane(i);
+                        float zPos = 50f; // Spawn way ahead
+                        Vector3 spawnPos = new Vector3(xPos, 0, zPos);
+
+                        lane.enemies[idx].Initialize(this, spawnPos, i, tier);
+                        break; // Found a spot, exit loop
+                    }
+                }
+            }
+        }
+    }
+
+    public void OnEnemyKilled(Enemy enemy)
+    {
+        // Award points based on base score and tier
+        long scoreMultiplier = (long)Mathf.Pow(10, (int)enemy.tier);
+        score += enemy.baseScoreValue * scoreMultiplier;
+        if (uiManager != null) uiManager.UpdateScore(score);
+
+        // Grant fragments
+        int fragmentsDropped = enemy.baseFragmentDropAmount * (int)Mathf.Pow(fragmentDropMultiplier, (int)enemy.tier);
+        currentFragments[enemy.fragmentDropType] += fragmentsDropped;
+
+        CheckForUpgrades(enemy.fragmentDropType);
+    }
+
+    void CheckForUpgrades(FragmentType type)
+    {
+        switch (type)
+        {
+            case FragmentType.Army:
+                if (currentFragments[type] >= currentArmyFragmentThreshold)
+                {
+                    currentFragments[type] -= (int)currentArmyFragmentThreshold;
+                    armyStrength += 10; // Flat power boost
+                    UpdateAvatarStrength();
+                    currentArmyFragmentThreshold *= 1.5f; // Increase cost for the next upgrade
+                }
+                break;
+            case FragmentType.Pistol:
+                HandleGunUpgrade(GunType.Pistol);
+                break;
+            case FragmentType.Rifle:
+                HandleGunUpgrade(GunType.Rifle);
+                break;
+            case FragmentType.Sniper:
+                HandleGunUpgrade(GunType.Sniper);
+                break;
+        }
+    }
+
+    void HandleGunUpgrade(GunType gunType)
+    {
+        Tier currentTier = gunTiers[gunType];
+        if (currentTier >= Tier.Legendary) return; // Already max tier
+
+        FragmentType fragType = (FragmentType)Enum.Parse(typeof(FragmentType), gunType.ToString());
+        int[] thresholds = GetThresholdsForGun(gunType);
+
+        // Ensure there is a threshold defined for the next tier
+        if ((int)currentTier >= thresholds.Length) return;
+
+        int requiredFragments = thresholds[(int)currentTier];
+
+        if (currentFragments[fragType] >= requiredFragments)
+        {
+            currentFragments[fragType] -= requiredFragments;
+
+            // If this is the first time collecting enough, unlock the gun
+            if (!unlockedGuns.Contains(gunType))
+            {
+                unlockedGuns.Add(gunType);
+            }
+
+            // Upgrade the tier
+            gunTiers[gunType]++;
+        }
+    }
+
+    int[] GetThresholdsForGun(GunType gunType)
+    {
+        switch (gunType)
+        {
+            case GunType.Pistol: return pistolFragmentThresholds;
+            case GunType.Rifle: return rifleFragmentThresholds;
+            case GunType.Sniper: return sniperFragmentThresholds;
+            default: return new int[0];
+        }
+    }
+
+    private Tier GetRandomTier(float difficulty)
+    {
+        // This method determines which enemy tier to spawn based on the current difficulty (a value from 0 to 1).
+        // You can adjust these thresholds and probabilities to fine-tune the game's difficulty curve.
+
+        float rand = UnityEngine.Random.value;
+
+        // Phase 1: At low difficulty, only spawn Normal enemies to give the player a chance to start.
+        if (difficulty < 0.1f)
+        {
+            return Tier.Normal;
+        }
+
+        // Phase 2: Gradually introduce tougher enemies as difficulty increases.
+        // The probability of Normal enemies decreases as the game gets harder.
+        if (rand < 0.7f - (difficulty * 0.5f))
+        {
+            return Tier.Normal;
+        }
+
+        // Ice enemies can only start appearing after 30% difficulty.
+        if (difficulty > 0.3f && rand < 0.9f - (difficulty * 0.2f))
+        {
+            return Tier.Ice;
+        }
+
+        // Arcane enemies are reserved for later in the game (after 60% difficulty).
+        if (difficulty > 0.6f && rand < 0.98f)
+        {
+            return Tier.Arcane;
+        }
+
+        // Legendary enemies are very rare and only appear in the end-game (after 80% difficulty).
+        if (difficulty > 0.8f)
+        {
+            return Tier.Legendary;
+        }
+
+        return Tier.Normal; // Fallback to ensure something always spawns.
     }
     #endregion
 
@@ -267,12 +544,16 @@ public class Manager : MonoBehaviour
             if (avatar.gameObject.activeSelf && Time.time >= avatar.nextFireTime)
             {
                 Bullet b = GetNext(avatar.activeGun);
-                Vector3 spawnPos = avatar.guns[(int)avatar.activeGun].transform.position;
+                // Use avatar position but raise it up to prevent floor clipping (approx gun height)
+                Vector3 spawnPos = avatar.transform.position + Vector3.up * 1.5f;
+
+                // Get the current global tier for this weapon
+                Tier currentGunTier = gunTiers[avatar.activeGun];
 
                 // Calculate bullet power
-                int bulletPower = (int)(Math.Pow(10f, (double)avatar.selfTier) * (double)(1 + avatar.gunTier) * Tiers.GunPower[avatar.activeGun]);
+                int bulletPower = (int)(Math.Pow(10f, (double)avatar.selfTier) * (double)(1 + currentGunTier) * Tiers.GunPower[avatar.activeGun]);
 
-                b.SetupBullet(avatar.selfTier, avatar.gunTier, spawnPos, bulletPower);
+                b.SetupBullet(currentGunTier, avatar.selfTier, spawnPos, bulletPower);
 
                 avatar.nextFireTime = Time.time + (1f / fireRate);
             }
@@ -349,26 +630,36 @@ public class Manager : MonoBehaviour
                 Enemy enemy = lanes[i].enemies[j];
                 if (enemy.gameObject.activeSelf)
                 {
-                    enemy.transform.position += Vector3.back * enemy.speed * dt;
-                    if (enemy.transform.position.z <= 0.5f)
+                    // Let the enemy decide if it wants to switch lanes
+                    enemy.UpdateBehavior();
+
+                    // Move the enemy on both axes
+                    Vector3 currentPos = enemy.transform.position;
+                    float newX = Mathf.MoveTowards(currentPos.x, enemy.TargetXPosition, 3f * dt); // 3f is lane switch speed
+                    float newZ = currentPos.z - enemy.speed * dt;
+                    enemy.transform.position = new Vector3(newX, 0, newZ);
+
+                    // Only check for collision ONCE when crossing the line
+                    if (!enemy.hasAttemptedDamage && enemy.transform.position.z <= 0f)
                     {
-                        // Check if an avatar is in this lane
-                        bool avatarInLane = false;
+                        enemy.hasAttemptedDamage = true; // This enemy has now made its attack run
+
+                        // Check for precise collision with any active avatar in the same lane
                         foreach (var avatar in avatars)
                         {
                             if (avatar.gameObject.activeSelf && GetLaneForX(avatar.transform.position.x) == i)
                             {
-                                avatarInLane = true;
-                                break;
-                            }
-                        }
+                                // Check if the enemy is close enough on the X-axis
+                                if (Mathf.Abs(avatar.transform.position.x - enemy.transform.position.x) < avatarCollisionWidth)
+                                {
+                                    // Deal damage to army
+                                    armyStrength -= 10; // example damage
+                                    UpdateAvatarStrength();
+                                    enemy.gameObject.SetActive(false);
 
-                        if (avatarInLane)
-                        {
-                            // Deal damage to army
-                            armyStrength -= 10; // example damage
-                            UpdateAvatarStrength();
-                            enemy.gameObject.SetActive(false);
+                                    break; // Enemy is destroyed, stop checking against other avatars
+                                }
+                            }
                         }
                     }
                 }
@@ -390,6 +681,16 @@ public class Manager : MonoBehaviour
 
     void UpdateAvatarStrength()
     {
+        if (armyStrength <= 0)
+        {
+            armyStrength = 0;
+            if (uiManager != null) uiManager.ShowGameOver();
+            Debug.Log("Game Over! Army strength is 0.");
+            Time.timeScale = 0f; // Pause the game
+            // Optionally, disable player input here
+            return; // Stop processing further
+        }
+
         int remaining = armyStrength;
         int avatarIndex = 0;
 
@@ -427,8 +728,13 @@ public class Manager : MonoBehaviour
             lanes[i].enemies = new Enemy[enemiesPerLane];
             for (int j = 0; j < enemiesPerLane; j++)
             {
-                lanes[i].enemies[j] = Instantiate(enemyPrefab, transform);
-                lanes[i].enemies[j].gameObject.SetActive(false);
+                // Pick a random enemy prefab from the provided list
+                if (enemyPrefabs.Length > 0)
+                {
+                    Enemy prefabToSpawn = enemyPrefabs[UnityEngine.Random.Range(0, enemyPrefabs.Length)];
+                    lanes[i].enemies[j] = Instantiate(prefabToSpawn, transform);
+                    lanes[i].enemies[j].gameObject.SetActive(false);
+                }
             }
         }
     }
@@ -452,12 +758,16 @@ public class Manager : MonoBehaviour
         }
     }
 
+    public float GetXForLane(int laneIndex)
+    {
+        float startX = -(roadWidth) / 2f;
+        return startX + laneIndex * laneWidth + laneWidth * 0.5f;
+    }
+
     int GetLaneForX(float xPos)
     {
-        // road is from -15 to 15, total width 30.
-        // 10 lanes, each 3 units wide.
-        // lane 0: -15 to -12, lane 1: -12 to -9, ..., lane 9: 12 to 15
-        int lane = Mathf.FloorToInt((xPos + 15f) / laneWidth);
+        float halfWidth = roadWidth / 2f;
+        int lane = Mathf.FloorToInt((xPos + halfWidth) / laneWidth);
         return Mathf.Clamp(lane, 0, laneCount - 1);
     }
     #endregion

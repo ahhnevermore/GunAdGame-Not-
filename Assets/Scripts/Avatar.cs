@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using System;
 
 public class Avatar : MonoBehaviour
 {
@@ -9,7 +7,6 @@ public class Avatar : MonoBehaviour
 
     [HideInInspector]
     public GunType activeGun = GunType.Pistol;
-    public Tier gunTier = Tier.Normal;
     public Tier selfTier = Tier.Normal;
     public int power = 0;
     public float nextFireTime = 0f;
@@ -42,7 +39,7 @@ public class Avatar : MonoBehaviour
             case GunType.Sniper:
                 {
                     SetActiveGun(2);
-                    fireRate = 1.4f;
+                    fireRate = 1.8f;
                 }
                 break;
         }
@@ -63,13 +60,15 @@ public class Avatar : MonoBehaviour
         power = p;
         selfTier = GetTierForPower(p);
     }
-    
+
     public Tier GetTierForPower(int power)
     {
         if (power < 10)
             return Tier.Normal;
+
         if (power < 100)
             return Tier.Ice;
+
         if (power < 1000)
             return Tier.Arcane;
 
