@@ -38,8 +38,3 @@ public class Bullet : MonoBehaviour
         gameObject.SetActive(true);
     }
 }
-
-public interface IDamageable
-{
-    int TakeDamage(int amount);
-}

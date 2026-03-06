@@ -6,45 +6,23 @@ using System;
 public class Avatar : MonoBehaviour
 {
     public List<GameObject> guns;   // Drag guns into this from Inspector
-    public BulletPool bulletPool;
 
-    private GunType activeGun = GunType.Pistol;
+    [HideInInspector]
+    public GunType activeGun = GunType.Pistol;
     public Tier gunTier = Tier.Normal;
     public Tier selfTier = Tier.Normal;
     public int power = 0;
-
-    private float fireRate; // bullets per second
-    private float nextFireTime = 0f;
-
-
-
-
+    public float nextFireTime = 0f;
 
     void Start()
     {
         SwitchTo(GunType.Pistol);
     }
-    void Update()
-    {
-        if (Keyboard.current.spaceKey.wasPressedThisFrame)
-        {
-            activeGun++;
-            if ((int)activeGun > 2)
-            {
-                activeGun = (GunType)0;
-            }
-            SwitchTo(activeGun);
-        }
 
-        if (Time.time >= nextFireTime)
-        {
-            FireBullet();
-            nextFireTime = Time.time + (1f / fireRate);
-        }
-    }
-
-    public void SwitchTo(GunType gunType)
+    public float SwitchTo(GunType gunType)
     {
+        activeGun = gunType;
+        float fireRate = 0f;
         switch (gunType)
         {
             case GunType.Pistol:
@@ -68,6 +46,7 @@ public class Avatar : MonoBehaviour
                 }
                 break;
         }
+        return fireRate;
     }
 
     void SetActiveGun(int index)
@@ -84,17 +63,13 @@ public class Avatar : MonoBehaviour
         power = p;
         selfTier = GetTierForPower(p);
     }
-
-
-
+    
     public Tier GetTierForPower(int power)
     {
         if (power < 10)
             return Tier.Normal;
-
         if (power < 100)
             return Tier.Ice;
-
         if (power < 1000)
             return Tier.Arcane;
 
